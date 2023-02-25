@@ -1,27 +1,25 @@
 # Copyright 2009-2017 Ram Rachum.
 # This program is distributed under the MIT license.
 
-import operator
+import collections
+import copy
 import heapq
 import itertools
-import numbers
-import collections
-import functools
-import copy
+import operator
 
-from python_toolbox import misc_tools
 from python_toolbox import math_tools
+from python_toolbox import misc_tools
 from python_toolbox.third_party.decorator import decorator
 
-from .lazy_tuple import LazyTuple
-from .ordered_dict import OrderedDict
-from .various_ordered_sets import FrozenOrderedSet
-from .various_frozen_dicts import FrozenDict, FrozenOrderedDict
 from .abstract import Ordered
+from .ordered_dict import OrderedDict
+from .various_frozen_dicts import FrozenDict, FrozenOrderedDict
+from .various_ordered_sets import FrozenOrderedSet
 
 
 class _NO_DEFAULT(misc_tools.NonInstantiable):
     '''Stand-in value used in `_BaseBagMixin.pop` when no default is wanted.'''
+
 
 class _ZeroCountAttempted(Exception):
     '''
@@ -31,11 +29,13 @@ class _ZeroCountAttempted(Exception):
     internally and the zero item would be silently removed.
     '''
 
+
 def _count_elements_slow(mapping, iterable):
     '''Put elements from `iterable` into `mapping`.'''
     mapping_get = mapping.get
     for element in iterable:
         mapping[element] = mapping_get(element, 0) + 1
+
 
 try:
     from _collections import _count_elements
@@ -107,7 +107,6 @@ class _BootstrappedCachedProperty(misc_tools.OwnNameDiscoveringDescriptor):
             self.getter = lambda thing: getter_or_value
         self.__doc__ = doc or getattr(self.getter, '__doc__', None)
 
-
     def __get__(self, obj, our_type=None):
 
         if obj is None:
@@ -120,7 +119,6 @@ class _BootstrappedCachedProperty(misc_tools.OwnNameDiscoveringDescriptor):
 
         return value
 
-
     def __call__(self, method_function):
         '''
         Decorate method to use value of `CachedProperty` as a context manager.
@@ -129,7 +127,6 @@ class _BootstrappedCachedProperty(misc_tools.OwnNameDiscoveringDescriptor):
             with getattr(self_obj, self.get_our_name(self_obj)):
                 return method_function(self_obj, *args, **kwargs)
         return decorator(inner, method_function)
-
 
     def __repr__(self):
         return f'<{type(self).__name__}: {self.our_name or self.getter}>'
@@ -156,7 +153,6 @@ class _BaseBagMixin:
                     continue
         else:
             _count_elements(self._dict, iterable)
-
 
     __getitem__ = lambda self, key: self._dict.get(key, 0)
 
@@ -258,7 +254,6 @@ class _BaseBagMixin:
             (key, min(self[key], other[key]))
             for key in FrozenOrderedSet(self) & FrozenOrderedSet(other))
         )
-
 
     def __add__(self, other):
         '''
@@ -515,7 +510,6 @@ class _BaseBagMixin:
         # Gets overridden in `_OrderedBagMixin`.
         raise TypeError("Can't reverse an unordered bag.")
 
-
     def get_contained_bags(self):
         '''
         Get all bags that are subsets of this bag.
@@ -533,7 +527,6 @@ class _BaseBagMixin:
         )
 
 
-
 class _MutableBagMixin(_BaseBagMixin):
     '''Mixin for a bag that's mutable. (i.e. not frozen.)'''
 
@@ -542,7 +535,6 @@ class _MutableBagMixin(_BaseBagMixin):
             super().__setitem__(i, _process_count(count))
         except _ZeroCountAttempted:
             del self[i]
-
 
     def setdefault(self, key, default=None):
         '''
@@ -598,7 +590,6 @@ class _MutableBagMixin(_BaseBagMixin):
             self[key] = max(self[key], other_count)
         return self
 
-
     def __iand__(self, other):
         '''
         Make this bag into an intersection bag of this bag and `other`.
@@ -617,7 +608,6 @@ class _MutableBagMixin(_BaseBagMixin):
         for key, count in tuple(self.items()):
             self[key] = min(count, other[key])
         return self
-
 
     def __iadd__(self, other):
         '''
@@ -640,7 +630,6 @@ class _MutableBagMixin(_BaseBagMixin):
             self[key] += other_count
         return self
 
-
     def __isub__(self, other):
         '''
         Subtract `other` from this bag.
@@ -656,7 +645,6 @@ class _MutableBagMixin(_BaseBagMixin):
             self[key] = max(self[key] - other_count, 0)
         return self
 
-
     def __imul__(self, other):
         '''Multiply all the counts in this bag by the integer `other`.'''
         if not math_tools.is_integer(other):
@@ -664,7 +652,6 @@ class _MutableBagMixin(_BaseBagMixin):
         for key in tuple(self):
             self[key] *= other
         return self
-
 
     def __ifloordiv__(self, other):
         '''
@@ -689,7 +676,6 @@ class _MutableBagMixin(_BaseBagMixin):
         for key in tuple(self):
             self[key] //= other
         return self
-
 
     def __imod__(self, other):
         '''
@@ -718,7 +704,6 @@ class _MutableBagMixin(_BaseBagMixin):
             return self
         else:
             return NotImplemented
-
 
     def __ipow__(self, other, modulo=None):
         '''Raise each count in this bag to the power of `other`.'''
@@ -809,6 +794,7 @@ class _FrozenBagMixin:
     # Poor man's caching done here because we can't import
     # `python_toolbox.caching` due to import loop:
     _contained_bags = None
+
     def get_contained_bags(self):
         '''
         Get all bags that are subsets of this bag.
@@ -818,7 +804,6 @@ class _FrozenBagMixin:
         if self._contained_bags is None:
             self._contained_bags = super().get_contained_bags()
         return self._contained_bags
-
 
 
 class _BaseDictDelegator(collections.abc.MutableMapping):
@@ -835,15 +820,20 @@ class _BaseDictDelegator(collections.abc.MutableMapping):
             self.update(dict)
         if len(kwargs):
             self.update(kwargs)
+
     def __len__(self): return len(self._dict)
+
     def __getitem__(self, key):
         if key in self._dict:
             return self._dict[key]
         if hasattr(self.__class__, '__missing__'):
             return self.__class__.__missing__(self, key)
         raise KeyError(key)
+
     def __setitem__(self, key, item): self._dict[key] = item
+
     def __delitem__(self, key): del self._dict[key]
+
     def __iter__(self):
         return iter(self._dict)
 
@@ -851,6 +841,7 @@ class _BaseDictDelegator(collections.abc.MutableMapping):
         return key in self._dict
 
     def __repr__(self): return repr(self._dict)
+
     def copy(self):
         if self.__class__ is _OrderedDictDelegator:
             return _OrderedDictDelegator(self._dict.copy())
@@ -863,12 +854,14 @@ class _BaseDictDelegator(collections.abc.MutableMapping):
             self._dict = data
         c.update(self)
         return c
+
     @classmethod
     def fromkeys(cls, iterable, value=None):
         d = cls()
         for key in iterable:
             d[key] = value
         return d
+
 
 class _OrderedDictDelegator(Ordered, _BaseDictDelegator):
     '''
@@ -890,6 +883,7 @@ class _OrderedDictDelegator(Ordered, _BaseDictDelegator):
         '._dict.sort',
         doc='Sort the keys in this dict. (With optional `key` function.)'
     )
+
 
 class _DictDelegator(_BaseDictDelegator):
     '''
@@ -920,7 +914,6 @@ class Bag(_MutableBagMixin, _DictDelegator):
     positive integers may be used as counts (zeros are weeded out), so we don't
     need to deal with all the complications of non-numerical counts.
     '''
-
 
 
 class OrderedBag(_OrderedBagMixin, _MutableBagMixin, _OrderedDictDelegator):
@@ -1027,7 +1020,6 @@ class FrozenOrderedBag(_OrderedBagMixin, _FrozenBagMixin, _BaseBagMixin,
     def reversed(self):
         '''Get a version of this `FrozenOrderedBag` with key order reversed.'''
         return type(self)(self._dict_type(reversed(tuple(self.items()))))
-
 
 
 Bag._frozen_type = FrozenBag

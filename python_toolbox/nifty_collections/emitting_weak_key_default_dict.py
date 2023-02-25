@@ -31,11 +31,9 @@ class EmittingWeakKeyDefaultDict(WeakKeyDefaultDict):
         super().__init__(*args, **kwargs)
         self.emitter = emitter
 
-
     def set_emitter(self, emitter):
         '''Set the emitter that will be emitted every time a change is made.'''
         self.emitter = emitter
-
 
     def __setitem__(self, key, value):
         result = super().__setitem__(key, value)
@@ -43,13 +41,11 @@ class EmittingWeakKeyDefaultDict(WeakKeyDefaultDict):
             self.emitter.emit()
         return result
 
-
     def __delitem__(self, key):
         result = super().__delitem__(key)
         if self.emitter:
             self.emitter.emit()
         return result
-
 
     def pop(self, key, *args):
         """ D.pop(k[,d]) -> v, remove specified key and return the
@@ -60,7 +56,6 @@ class EmittingWeakKeyDefaultDict(WeakKeyDefaultDict):
             self.emitter.emit()
         return result
 
-
     def popitem(self):
         """ D.popitem() -> (k, v), remove and return some (key, value)
         pair as a 2-tuple; but raise KeyError if D is empty """
@@ -69,14 +64,12 @@ class EmittingWeakKeyDefaultDict(WeakKeyDefaultDict):
             self.emitter.emit()
         return result
 
-
     def clear(self):
         """ D.clear() -> None.  Remove all items from D. """
         result = super().clear()
         if self.emitter:
             self.emitter.emit()
         return result
-
 
     def __repr__(self):
         return '%s(%s, %s, %s)' % (
@@ -85,7 +78,6 @@ class EmittingWeakKeyDefaultDict(WeakKeyDefaultDict):
             self.default_factory,
             dict(self)
         )
-
 
     def __reduce__(self):
         """

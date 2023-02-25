@@ -10,7 +10,7 @@ infinity = float('inf')
 infinities = (infinity, -infinity)
 
 
-def factorial(x, start=1):
+def factorial(number, start=1):
     '''
     Calculate a factorial.
 
@@ -26,7 +26,7 @@ def factorial(x, start=1):
 
     '''
     from python_toolbox import misc_tools
-    return misc_tools.general_product(range(start, x+1), start=1)
+    return misc_tools.general_product(range(start, number+1), start=1)
 
 
 def inverse_factorial(number, round_up=True):
@@ -49,7 +49,7 @@ def inverse_factorial(number, round_up=True):
     if number == 0:
         return 0
     elif number < 1:
-        return int(round_up) # Heh.
+        return int(round_up)  # Heh.
     elif number == 1:
         return 1
     else:
@@ -77,8 +77,7 @@ def from_factoradic(factoradic_number):
     '''
     from python_toolbox import sequence_tools
     assert isinstance(factoradic_number, collections.abc.Iterable)
-    factoradic_number = \
-              sequence_tools.ensure_iterable_is_sequence(factoradic_number)
+    factoradic_number = sequence_tools.ensure_iterable_is_sequence(factoradic_number)
     number = 0
     for i, value in enumerate(reversed(factoradic_number)):
         assert 0 <= value <= i
@@ -119,4 +118,3 @@ def to_factoradic(number, n_digits_pad=0):
         return ((0,) * (n_digits_pad - len(result))) + result
     else:
         return result
-

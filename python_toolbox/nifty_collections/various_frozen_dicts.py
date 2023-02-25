@@ -78,10 +78,10 @@ class FrozenOrderedDict(Ordered, _AbstractFrozenDict):
     # (Gotta manually carry `__hash__` over from the base class because setting
     # `__eq__` resets it. )
 
-
     # Poor man's caching because we can't import `CachedProperty` due to import
     # loop:
     _reversed = None
+
     @property
     def reversed(self):
         '''

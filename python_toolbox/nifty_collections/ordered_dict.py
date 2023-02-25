@@ -1,9 +1,9 @@
 # Copyright 2009-2017 Ram Rachum.
 # This program is distributed under the MIT license.
 
-from python_toolbox import comparison_tools
-
 from collections import OrderedDict as StdlibOrderedDict
+
+from python_toolbox import comparison_tools
 
 
 class OrderedDict(StdlibOrderedDict):
@@ -26,7 +26,6 @@ class OrderedDict(StdlibOrderedDict):
         sorted_keys = sorted(self.keys(), key=key_function, reverse=reverse)
         for key_ in sorted_keys[1:]:
             self.move_to_end(key_)
-
 
     def index(self, key):
         '''Get the index number of `key`.'''

@@ -1,8 +1,6 @@
 # Copyright 2009-2017 Ram Rachum.
 # This program is distributed under the MIT license.
 
-import numbers
-
 
 infinity = float('inf')
 infinities = (infinity, -infinity)
@@ -25,8 +23,7 @@ def get_median(iterable):
 def get_mean(iterable):
     '''Get the mean (average) of an iterable of numbers.'''
     sum_ = 0
-    for i, value in enumerate(iterable):
+    count = 0
+    for count, value in enumerate(iterable):
         sum_ += value
-    return sum_ / (i + 1)
-
-
+    return sum_ / (count + 1)

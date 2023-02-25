@@ -1,18 +1,17 @@
 # Copyright 2009-2017 Ram Rachum.
 # This program is distributed under the MIT license.
 
-import functools
-import threading
 import collections
+import functools
 import itertools
+import threading
 
-from python_toolbox import misc_tools
 from python_toolbox import decorator_tools
-from python_toolbox import comparison_tools
+from python_toolbox import misc_tools
 from python_toolbox.third_party.decorator import decorator
 
-
 infinity = float('inf')
+
 
 class _SENTINEL(misc_tools.NonInstantiable):
     '''Sentinel used to detect the end of an iterable.'''
@@ -99,7 +98,6 @@ class LazyTuple(collections.abc.Sequence):
         self.lock = threading.Lock()
         '''Lock used while exhausting to make `LazyTuple` thread-safe.'''
 
-
     @classmethod
     @decorator_tools.helpful_decorator_builder
     def factory(cls, definitely_infinite=False):
@@ -121,14 +119,12 @@ class LazyTuple(collections.abc.Sequence):
                        definitely_infinite=definitely_infinite)
         return decorator(inner)
 
-
     @property
     def known_length(self):
         '''
         The number of items which have been taken from the internal iterator.
         '''
         return len(self.collected_data)
-
 
     def exhaust(self, i=infinity):
         '''
@@ -169,7 +165,6 @@ class LazyTuple(collections.abc.Sequence):
                 self.is_exhausted = True
                 break
 
-
     def __getitem__(self, i):
         '''Get item by index, either an integer index or a slice.'''
         self.exhaust(i)
@@ -179,14 +174,12 @@ class LazyTuple(collections.abc.Sequence):
         else:
             return result
 
-
     def __len__(self):
         if self.definitely_infinite:
             return 0 # Unfortunately infinity isn't supported.
         else:
             self.exhaust()
             return len(self.collected_data)
-
 
     def __eq__(self, other):
         from python_toolbox import sequence_tools
@@ -200,16 +193,13 @@ class LazyTuple(collections.abc.Sequence):
                 return False
         return True
 
-
     def __ne__(self, other):
         return not self.__eq__(other)
-
 
     def __bool__(self):
         try: next(iter(self))
         except StopIteration: return False
         else: return True
-
 
     def __lt__(self, other):
         if not self and other:
@@ -238,7 +228,6 @@ class LazyTuple(collections.abc.Sequence):
                 assert a > b
                 return False
 
-
     def __repr__(self):
         '''
         Return a human-readeable representation of the `LazyTuple`.
@@ -259,22 +248,17 @@ class LazyTuple(collections.abc.Sequence):
                 inner = '%s...' % repr(self.collected_data)
         return '<%s: %s>' % (self.__class__.__name__, inner)
 
-
     def __add__(self, other):
         return tuple(self) + tuple(other)
-
 
     def __radd__(self, other):
         return tuple(other) + tuple(self)
 
-
     def __mul__(self, other):
         return tuple(self).__mul__(other)
 
-
     def __rmul__(self, other):
         return tuple(self).__rmul__(other)
-
 
     def __hash__(self):
         '''
@@ -287,4 +271,3 @@ class LazyTuple(collections.abc.Sequence):
         else:
             self.exhaust()
             return hash(tuple(self))
-

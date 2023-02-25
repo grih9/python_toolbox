@@ -24,7 +24,6 @@ class IdentityRef(weakref.ref):
         weakref.ref.__init__(self, thing, callback)
         self._hash = id(thing)
 
-
     def __hash__(self):
         return self._hash
 
@@ -45,6 +44,7 @@ class WeakKeyIdentityDict(collections.abc.MutableMapping):
 
     def __init__(self, dict_=None):
         self.data = {}
+
         def remove(k, selfref=weakref.ref(self)):
             self = selfref()
             if self is not None:
@@ -52,22 +52,17 @@ class WeakKeyIdentityDict(collections.abc.MutableMapping):
         self._remove = remove
         if dict_ is not None: self.update(dict_)
 
-
     def __delitem__(self, key):
         del self.data[IdentityRef(key)]
-
 
     def __getitem__(self, key):
         return self.data[IdentityRef(key)]
 
-
     def __repr__(self):
         return f"<WeakKeyIdentityDict at {id(self)}>"
 
-
     def __setitem__(self, key, value):
         self.data[IdentityRef(key, self._remove)] = value
-
 
     def copy(self):
         """ D.copy() -> a shallow copy of D """
@@ -78,11 +73,9 @@ class WeakKeyIdentityDict(collections.abc.MutableMapping):
                 new[o] = value
         return new
 
-
     def get(self, key, default=None):
         """ D.get(k[,d]) -> D[k] if k in D, else d.  d defaults to None. """
         return self.data.get(IdentityRef(key),default)
-
 
     def __contains__(self, key):
         try:
@@ -91,9 +84,7 @@ class WeakKeyIdentityDict(collections.abc.MutableMapping):
             return 0
         return wr in self.data
 
-
     has_key = __contains__
-
 
     def items(self):
         """ D.items() -> list of D's (key, value) pairs, as 2-tuples """
@@ -104,14 +95,12 @@ class WeakKeyIdentityDict(collections.abc.MutableMapping):
                 L.append((o, value))
         return L
 
-
     def iteritems(self):
         """ D.iteritems() -> an iterator over the (key, value) items of D """
         for wr, value in self.data.items():
             key = wr()
             if key is not None:
                 yield key, value
-
 
     def iterkeyrefs(self):
         """Return an iterator that yields the weak references to the keys.
@@ -125,7 +114,6 @@ class WeakKeyIdentityDict(collections.abc.MutableMapping):
         """
         return iter(self.data.keys())
 
-
     def iterkeys(self):
         """ D.iterkeys() -> an iterator over the keys of D """
         for wr in self.data.keys():
@@ -136,11 +124,9 @@ class WeakKeyIdentityDict(collections.abc.MutableMapping):
     def __iter__(self):
         return iter(self.keys())
 
-
     def itervalues(self):
         """ D.itervalues() -> an iterator over the values of D """
         return iter(self.data.values())
-
 
     def keyrefs(self):
         """Return a list of weak references to the keys.
@@ -154,7 +140,6 @@ class WeakKeyIdentityDict(collections.abc.MutableMapping):
         """
         return list(self.data.keys())
 
-
     def keys(self):
         """ D.keys() -> list of D's keys """
         L = []
@@ -163,7 +148,6 @@ class WeakKeyIdentityDict(collections.abc.MutableMapping):
             if o is not None:
                 L.append(o)
         return L
-
 
     def popitem(self):
         """ D.popitem() -> (k, v), remove and return some (key, value) pair
@@ -174,18 +158,15 @@ class WeakKeyIdentityDict(collections.abc.MutableMapping):
             if o is not None:
                 return o, value
 
-
     def pop(self, key, *args):
         """ D.pop(k[,d]) -> v, remove specified key and return the
         corresponding value. If key is not found, d is returned if given,
         otherwise KeyError is raised """
         return self.data.pop(IdentityRef(key), *args)
 
-
     def setdefault(self, key, default=None):
         """D.setdefault(k[,d]) -> D.get(k,d), also set D[k]=d if k not in D"""
         return self.data.setdefault(IdentityRef(key, self._remove),default)
-
 
     def update(self, dict=None, **kwargs):
         """ D.update(E, **F) -> None. Update D from E and F: for k in E: D[k] =
@@ -201,7 +182,5 @@ class WeakKeyIdentityDict(collections.abc.MutableMapping):
         if len(kwargs):
             self.update(kwargs)
 
-
     def __len__(self):
         return len(self.data)
-

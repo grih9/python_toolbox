@@ -43,14 +43,15 @@ class WeakKeyDefaultDict(collections.abc.MutableMapping):
             args = args[1:]
 
         self.data = {}
+
         def remove(k, selfref=ref(self)):
             self = selfref()
             if self is not None:
                 del self.data[k]
+
         self._remove = remove
         if args:
             self.update(args[0])
-
 
     def __missing__(self, key):
         '''Get a value for a key which isn't currently registered.'''
@@ -59,7 +60,6 @@ class WeakKeyDefaultDict(collections.abc.MutableMapping):
             return value
         else: # self.default_factory is None
             raise KeyError(key)
-
 
     def __repr__(self, recurse=set()):
         type_name = type(self).__name__
@@ -75,12 +75,10 @@ class WeakKeyDefaultDict(collections.abc.MutableMapping):
         finally:
             recurse.remove(id(self))
 
-
     def copy(self): # todo: needs testing
         return type(self)(self, default_factory=self.default_factory)
 
     __copy__ = copy
-
 
     def __reduce__(self):
         """
@@ -97,10 +95,8 @@ class WeakKeyDefaultDict(collections.abc.MutableMapping):
         return (type(self), (self.default_factory,), None, None,
                 iter(self.items()))
 
-
     def __delitem__(self, key):
         del self.data[ref(key)]
-
 
     def __getitem__(self, key):
         try:
@@ -112,14 +108,11 @@ class WeakKeyDefaultDict(collections.abc.MutableMapping):
             else:
                 raise
 
-
     def __setitem__(self, key, value):
         self.data[ref(key, self._remove)] = value
 
-
     def get(self, key, default=None):
         return self.data.get(ref(key),default)
-
 
     def __contains__(self, key):
         try:
@@ -128,9 +121,7 @@ class WeakKeyDefaultDict(collections.abc.MutableMapping):
             return 0
         return wr in self.data
 
-
     has_key = __contains__
-
 
     def items(self):
         """ D.items() -> list of D's (key, value) pairs, as 2-tuples """
@@ -141,14 +132,12 @@ class WeakKeyDefaultDict(collections.abc.MutableMapping):
                 L.append((o, value))
         return L
 
-
     def iteritems(self):
         """ D.iteritems() -> an iterator over the (key, value) items of D """
         for wr, value in self.data.items():
             key = wr()
             if key is not None:
                 yield key, value
-
 
     def iterkeyrefs(self):
         """Return an iterator that yields the weak references to the keys.
@@ -162,7 +151,6 @@ class WeakKeyDefaultDict(collections.abc.MutableMapping):
         """
         return iter(self.data.keys())
 
-
     def iterkeys(self):
         """ D.iterkeys() -> an iterator over the keys of D """
         for wr in self.data.keys():
@@ -170,15 +158,12 @@ class WeakKeyDefaultDict(collections.abc.MutableMapping):
             if obj is not None:
                 yield obj
 
-
     def __iter__(self):
         return iter(self.keys())
-
 
     def itervalues(self):
         """ D.itervalues() -> an iterator over the values of D """
         return iter(self.data.values())
-
 
     def keyrefs(self):
         """Return a list of weak references to the keys.
@@ -192,7 +177,6 @@ class WeakKeyDefaultDict(collections.abc.MutableMapping):
         """
         return list(self.data.keys())
 
-
     def keys(self):
         """ D.keys() -> list of D's keys """
         L = []
@@ -201,7 +185,6 @@ class WeakKeyDefaultDict(collections.abc.MutableMapping):
             if o is not None:
                 L.append(o)
         return L
-
 
     def popitem(self):
         """ D.popitem() -> (k, v), remove and return some (key, value) pair
@@ -212,18 +195,15 @@ class WeakKeyDefaultDict(collections.abc.MutableMapping):
             if o is not None:
                 return o, value
 
-
     def pop(self, key, *args):
         """ D.pop(k[,d]) -> v, remove specified key and return the
         corresponding value. If key is not found, d is returned if given,
         otherwise KeyError is raised """
         return self.data.pop(ref(key), *args)
 
-
     def setdefault(self, key, default=None):
         """D.setdefault(k[,d]) -> D.get(k,d), also set D[k]=d if k not in D"""
         return self.data.setdefault(ref(key, self._remove),default)
-
 
     def update(self, dict=None, **kwargs):
         """D.update(E, **F) -> None. Update D from E and F: for k in E: D[k] =
@@ -238,7 +218,6 @@ class WeakKeyDefaultDict(collections.abc.MutableMapping):
                 d[ref(key, self._remove)] = value
         if len(kwargs):
             self.update(kwargs)
-
 
     def __len__(self):
         return len(self.data)

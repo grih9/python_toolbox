@@ -1,15 +1,13 @@
 # Copyright 2009-2017 Ram Rachum.
 # This program is distributed under the MIT license.
 
-import numbers
-import collections
-import itertools
-
 infinity = float('inf')
 
 
 _stirling_caches = []
 _n_highest_cache_completed = -1
+
+
 def stirling(n, k, skip_calculation=False):
     '''
     Calculate Stirling number of the second kind of `n` and `k`.
@@ -58,7 +56,6 @@ def stirling(n, k, skip_calculation=False):
                     current_n
                 )
 
-
     return _stirling_caches[n][k]
 
 
@@ -76,4 +73,3 @@ def abs_stirling(n, k):
 
     '''
     return abs(stirling(n, k))
-

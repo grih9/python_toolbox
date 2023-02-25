@@ -4,15 +4,11 @@
 from __future__ import generator_stop
 
 import collections
-import operator
 import itertools
+import operator
 
 from python_toolbox import comparison_tools
-from python_toolbox import context_management
-from python_toolbox import caching
 from python_toolbox import freezing
-
-
 
 KEY, PREV, NEXT = range(3)
 
@@ -42,7 +38,6 @@ class BaseOrderedSet(collections.abc.Set, collections.abc.Sequence):
 
     def __contains__(self, key):
         return key in self._map
-
 
     def __iter__(self):
         end = self._end
@@ -76,7 +71,6 @@ class BaseOrderedSet(collections.abc.Set, collections.abc.Sequence):
         self._end += [None, self._end, self._end]
         self._map = {}
 
-
     def __add(self, key, last=True):
         '''
         Add an element to a set.
@@ -96,7 +90,6 @@ class BaseOrderedSet(collections.abc.Set, collections.abc.Sequence):
                 first[PREV] = end[NEXT] = self._map[key] = [key, end, first]
 
 
-
 class FrozenOrderedSet(BaseOrderedSet):
     '''
     A `frozenset` with an order.
@@ -108,7 +101,6 @@ class FrozenOrderedSet(BaseOrderedSet):
 
     def __hash__(self):
         return hash((type(self), tuple(self)))
-
 
 
 class OrderedSet(BaseOrderedSet, collections.abc.MutableSet):
@@ -130,7 +122,6 @@ class OrderedSet(BaseOrderedSet, collections.abc.MutableSet):
         self.remove(key)
         self.add(key, last=last)
 
-
     def sort(self, key=None, reverse=False):
         '''
         Sort the items according to their keys, changing the order in-place.
@@ -145,7 +136,6 @@ class OrderedSet(BaseOrderedSet, collections.abc.MutableSet):
 
         self.clear()
         self |= sorted_members
-
 
     def discard(self, key):
         '''
@@ -169,7 +159,6 @@ class OrderedSet(BaseOrderedSet, collections.abc.MutableSet):
     def get_frozen(self):
         '''Get a frozen version of this ordered set.'''
         return FrozenOrderedSet(self)
-
 
 
 class EmittingOrderedSet(OrderedSet):

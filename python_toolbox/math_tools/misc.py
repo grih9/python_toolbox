@@ -21,8 +21,7 @@ def cute_floor_div(x, y):
     `infinity`. (Python's built-in `divmod` would make it `nan`.)
     '''
 
-    if ((x in infinities) and (y != 0)) or \
-                                   (y in infinities) and (x not in infinities):
+    if ((x in infinities) and (y != 0)) or (y in infinities) and (x not in infinities):
         return x / y
     else:
         return x // y
@@ -47,18 +46,17 @@ def cute_divmod(x, y):
         return divmod(x, y)
 
 
-
-def get_sign(x):
+def get_sign(number):
     '''Get the sign of a number.'''
-    if x > 0:
+    if number > 0:
         return 1
-    if x == 0:
+    if number == 0:
         return 0
-    assert x < 0
+    assert number < 0
     return -1
 
 
-def round_to_int(x, up=False):
+def round_to_int(number, up=False):
     '''
     Round a number to an `int`.
 
@@ -69,12 +67,12 @@ def round_to_int(x, up=False):
     If you want to round a number to the closest `int`, just use
     `int(round(x))`.
     '''
-    rounded_down = int(cute_floor_div(x, 1))
+    rounded_down = int(cute_floor_div(number, 1))
     if up:
-        return int(x) if (isinstance(x, float) and x.is_integer()) \
-               else rounded_down + 1
+        return int(number) if (isinstance(number, float) and number.is_integer()) else rounded_down + 1
     else:
         return rounded_down
+
 
 def ceil_div(x, y):
     '''Divide `x` by `y`, rounding up if there's a remainder.'''
@@ -105,7 +103,6 @@ def convert_to_base_in_tuple(number, base):
     return tuple(reversed(work_in_progress))
 
 
-
 def restrict_number_to_range(number, low_cutoff=-infinity,
                              high_cutoff=infinity):
     '''
@@ -133,8 +130,7 @@ def binomial(big, small):
     if big < small:
         return 0
     else:
-        return (math.factorial(big) // math.factorial(big - small)
-                                                      // math.factorial(small))
+        return (math.factorial(big) // math.factorial(big - small) // math.factorial(small))
 
 
 def product(numbers):
@@ -143,17 +139,17 @@ def product(numbers):
     return misc_tools.general_product(numbers, start=1)
 
 
-def is_integer(x):
+def is_integer(number):
     '''
     Is `x` an integer?
 
     Does return `True` for things like 1.0 and `1+0j`.
     '''
     try:
-        inted_x = int(x)
+        inted_x = int(number)
     except (TypeError, ValueError, OverflowError):
         return False
-    return inted_x == x
+    return inted_x == number
 
 
 class RoundMode(python_toolbox.cute_enum.CuteEnum):
@@ -169,7 +165,8 @@ class RoundMode(python_toolbox.cute_enum.CuteEnum):
     ALWAYS_UP = 3
     PROBABILISTIC = 4
 
-def cute_round(x, round_mode=RoundMode.CLOSEST_OR_DOWN, *, step=1):
+
+def cute_round(number, round_mode=RoundMode.CLOSEST_OR_DOWN, *, step=1):
     '''
     Round a number, with lots of different options for rounding.
 
@@ -213,7 +210,7 @@ def cute_round(x, round_mode=RoundMode.CLOSEST_OR_DOWN, *, step=1):
 
     '''
     assert step > 0
-    div, mod = divmod(x, step)
+    div, mod = divmod(number, step)
     if round_mode == RoundMode.CLOSEST_OR_DOWN:
         round_up = (mod > 0.5 * step)
     elif round_mode == RoundMode.CLOSEST_OR_UP:
@@ -226,4 +223,3 @@ def cute_round(x, round_mode=RoundMode.CLOSEST_OR_DOWN, *, step=1):
         assert round_mode == RoundMode.PROBABILISTIC
         round_up = random.random() < mod / step
     return (div + round_up) * step
-
