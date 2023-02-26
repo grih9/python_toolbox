@@ -32,8 +32,7 @@ def _convert_index_to_exhaustion_point(index):
     assert isinstance(index, int) or index == infinity
     if index >= 0:
         return index
-    else: # i < 0
-        return infinity
+    return infinity
 
 
 @decorator
@@ -76,9 +75,9 @@ class LazyTuple(collections.abc.Sequence):
 
     def __init__(self, iterable, definitely_infinite=False):
         was_given_a_sequence = isinstance(iterable, collections.abc.Sequence) \
-                                        and not isinstance(iterable, LazyTuple)
+                               and not isinstance(iterable, LazyTuple)
 
-        self.is_exhausted = True if was_given_a_sequence else False
+        self.is_exhausted = bool(was_given_a_sequence)
         '''Flag saying whether the internal iterator is tobag exhausted.'''
 
         self.collected_data = iterable if was_given_a_sequence else []
@@ -138,7 +137,7 @@ class LazyTuple(collections.abc.Sequence):
         if self.is_exhausted:
             return
 
-        elif isinstance(i, int) or i == infinity:
+        if isinstance(i, int) or i == infinity:
             exhaustion_point = _convert_index_to_exhaustion_point(i)
 
         else:
@@ -154,7 +153,7 @@ class LazyTuple(collections.abc.Sequence):
                 _convert_index_to_exhaustion_point(canonical_slice.stop)
             )
 
-            if canonical_slice.step > 0: # Compensating for excluded last item:
+            if canonical_slice.step > 0:  # Compensating for excluded last item:
                 exhaustion_point -= 1
 
         while len(self.collected_data) <= exhaustion_point:
@@ -171,25 +170,25 @@ class LazyTuple(collections.abc.Sequence):
         result = self.collected_data[i]
         if isinstance(i, slice):
             return tuple(result)
-        else:
-            return result
+
+        return result
 
     def __len__(self):
         if self.definitely_infinite:
-            return 0 # Unfortunately infinity isn't supported.
-        else:
-            self.exhaust()
-            return len(self.collected_data)
+            return 0  # Unfortunately infinity isn't supported.
+
+        self.exhaust()
+        return len(self.collected_data)
 
     def __eq__(self, other):
         from python_toolbox import sequence_tools
         if not sequence_tools.is_immutable_sequence(other):
             return False
-        for i, j in itertools.zip_longest(self, other,
-                                           fillvalue=_SENTINEL):
-            if (i is _SENTINEL) or (j is _SENTINEL):
+        for self_obj, other_obj in itertools.zip_longest(self, other,
+                                                         fillvalue=_SENTINEL):
+            if (self_obj is _SENTINEL) or (other_obj is _SENTINEL):
                 return False
-            if i != j:
+            if self_obj != other_obj:
                 return False
         return True
 
@@ -197,36 +196,38 @@ class LazyTuple(collections.abc.Sequence):
         return not self.__eq__(other)
 
     def __bool__(self):
-        try: next(iter(self))
-        except StopIteration: return False
-        else: return True
+        try:
+            next(iter(self))
+        except StopIteration:
+            return False
+        else:
+            return True
 
     def __lt__(self, other):
         if not self and other:
             return True
-        elif self and not other:
+        if (self and not other) or (not self and not other):
             return False
-        elif not self and not other:
-            return False
-        for a, b in itertools.zip_longest(self, other,
-                                           fillvalue=_SENTINEL):
-            if a is _SENTINEL:
+        for self_iter, other_iter in itertools.zip_longest(self, other,
+                                                           fillvalue=_SENTINEL):
+            if self_iter is _SENTINEL:
                 # `self` ran out. Now there can be two cases: (a) `other` ran
                 # out too or (b) `other` didn't run out yet. In case of (a), we
                 # have `self == other`, and in case of (b), we have `self <
                 # other`. In any case, `self <= other is True` so we can
                 # unconditionally return `True`.
                 return True
-            elif b is _SENTINEL:
-                assert a is not _SENTINEL
+            if other_iter is _SENTINEL:
+                assert self_iter is not _SENTINEL
                 return False
-            elif a == b:
+            if self_iter == other_iter:
                 continue
-            elif a < b:
+            if self_iter < other_iter:
                 return True
-            else:
-                assert a > b
-                return False
+
+            assert self_iter > other_iter
+            return False
+        return None
 
     def __repr__(self):
         '''
@@ -241,12 +242,12 @@ class LazyTuple(collections.abc.Sequence):
         if self.is_exhausted:
             inner = repr(self.collected_data)
 
-        else: # not self.exhausted
+        else:  # not self.exhausted
             if self.collected_data == []:
                 inner = '(...)'
             else:
                 inner = '%s...' % repr(self.collected_data)
-        return '<%s: %s>' % (self.__class__.__name__, inner)
+        return f'<{self.__class__.__name__}: {inner}>'
 
     def __add__(self, other):
         return tuple(self) + tuple(other)
@@ -268,6 +269,6 @@ class LazyTuple(collections.abc.Sequence):
         '''
         if self.definitely_infinite:
             raise TypeError("An infinite `LazyTuple` isn't hashable.")
-        else:
-            self.exhaust()
-            return hash(tuple(self))
+
+        self.exhaust()
+        return hash(tuple(self))

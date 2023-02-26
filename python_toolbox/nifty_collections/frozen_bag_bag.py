@@ -58,8 +58,7 @@ class FrozenBagBag(FrozenBag):
             sub_fbb_prototype = Bag(self)
             sub_fbb_prototype[key_to_reduce] -= 1
             sub_fbb_prototype[key_to_reduce - 1] += 1
-            sub_fbbs_bag[FrozenBagBag(sub_fbb_prototype)] = \
-                                                         value_of_key_to_reduce
+            sub_fbbs_bag[FrozenBagBag(sub_fbb_prototype)] = value_of_key_to_reduce
         return FrozenBag(sub_fbbs_bag)
 
     def get_sub_fbbs_for_one_key_and_previous_piles_removed(self):
@@ -91,8 +90,7 @@ class FrozenBagBag(FrozenBag):
         '''
         sub_fbbs = []
         growing_dict = {}
-        for key_to_reduce, value_of_key_to_reduce in \
-                                                reversed(sorted(self.items())):
+        for key_to_reduce, value_of_key_to_reduce in sorted(self.items(), reverse=True):
             growing_dict[key_to_reduce] = value_of_key_to_reduce
 
             sub_fbb_prototype = Bag(growing_dict)
@@ -103,7 +101,7 @@ class FrozenBagBag(FrozenBag):
                 sub_fbbs.append(
                     FrozenBagBag(
                         {key: (i if key == key_to_reduce else value)
-                               for key, value in sub_fbb_prototype.items()}
+                         for key, value in sub_fbb_prototype.items()}
                     )
                 )
         return tuple(sub_fbbs)

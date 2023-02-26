@@ -1,0 +1,6 @@
+select = ["E", "F", "B", "A", "C", "ARG", "BLE", "D", "DTZ", "EM", "EXE", "G", "ICN", "INP", "ISC",
+    "N", "PD", "PGH", "PIE", "PL", "PT", "PTH", "RET", "RUF", "S", "SIM", "T", "TCH", "TID", "TRY", "UP", "W", "YTT"]
+line-length=120
+exclude = ["__init__.py"]
+ignore = ["S101", "D", "Q", "COM", "FBT", "ANN", "ERA", "UP010", "EM", "TRY003", "TRY300", "PLR0911", "RET503"]
+target-version = "py37"

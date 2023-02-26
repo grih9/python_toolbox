@@ -27,7 +27,7 @@ def stirling(n, k, skip_calculation=False):
     if n == k == 0:
         return 1
     if not skip_calculation:
-        for current_n in range(_n_highest_cache_completed + 1, n+1):
+        for current_n in range(_n_highest_cache_completed + 1, n + 1):
             try:
                 cache = _stirling_caches[current_n]
             except IndexError:
@@ -44,9 +44,8 @@ def stirling(n, k, skip_calculation=False):
                     cache.append(
                         - (current_n - 1) * stirling(current_n - 1,
                                                      current_index,
-                                                     skip_calculation=True) +
-                        stirling(current_n - 1, current_index - 1,
-                                 skip_calculation=True)
+                                                     skip_calculation=True) + stirling(current_n - 1, current_index - 1,
+                                                                                       skip_calculation=True)
                     )
 
                 current_index += 1

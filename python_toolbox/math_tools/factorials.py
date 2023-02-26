@@ -26,7 +26,7 @@ def factorial(number, start=1):
 
     '''
     from python_toolbox import misc_tools
-    return misc_tools.general_product(range(start, number+1), start=1)
+    return misc_tools.general_product(range(start, number + 1), start=1)
 
 
 def inverse_factorial(number, round_up=True):
@@ -48,18 +48,19 @@ def inverse_factorial(number, round_up=True):
     assert number >= 0
     if number == 0:
         return 0
-    elif number < 1:
+    if number < 1:
         return int(round_up)  # Heh.
-    elif number == 1:
+    if number == 1:
         return 1
-    else:
-        current_number = 1
-        for multiplier in itertools.count(2):
-            current_number *= multiplier
-            if current_number == number:
-                return multiplier
-            elif current_number > number:
-                return multiplier if round_up else (multiplier - 1)
+
+    current_number = 1
+    for multiplier in itertools.count(2):
+        current_number *= multiplier
+        if current_number == number:
+            return multiplier
+        if current_number > number:
+            return multiplier if round_up else (multiplier - 1)
+    return None
 
 
 def from_factoradic(factoradic_number):
@@ -116,5 +117,4 @@ def to_factoradic(number, n_digits_pad=0):
     result = tuple(digits)
     if (len(result) < n_digits_pad):
         return ((0,) * (n_digits_pad - len(result))) + result
-    else:
-        return result
+    return result

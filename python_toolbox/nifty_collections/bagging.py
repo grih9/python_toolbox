@@ -21,7 +21,7 @@ class _NO_DEFAULT(misc_tools.NonInstantiable):
     '''Stand-in value used in `_BaseBagMixin.pop` when no default is wanted.'''
 
 
-class _ZeroCountAttempted(Exception):
+class _ZeroCountAttemptedError(Exception):
     '''
     An attempt was made to add a value with a count of zero to a bag.
 
@@ -57,7 +57,7 @@ def _process_count(count):
         )
 
     if count == 0:
-        raise _ZeroCountAttempted
+        raise _ZeroCountAttemptedError
 
     return int(count)
 
@@ -104,7 +104,7 @@ class _BootstrappedCachedProperty(misc_tools.OwnNameDiscoveringDescriptor):
         if callable(getter_or_value) and not force_value_not_getter:
             self.getter = getter_or_value
         else:
-            self.getter = lambda thing: getter_or_value
+            self.getter = lambda _: getter_or_value
         self.__doc__ = doc or getattr(self.getter, '__doc__', None)
 
     def __get__(self, obj, our_type=None):
@@ -123,7 +123,7 @@ class _BootstrappedCachedProperty(misc_tools.OwnNameDiscoveringDescriptor):
         '''
         Decorate method to use value of `CachedProperty` as a context manager.
         '''
-        def inner(same_method_function, self_obj, *args, **kwargs):
+        def inner(_, self_obj, *args, **kwargs):
             with getattr(self_obj, self.get_our_name(self_obj)):
                 return method_function(self_obj, *args, **kwargs)
         return decorator(inner, method_function)
@@ -142,19 +142,21 @@ class _BaseBagMixin:
     general to all of them are implemented here.
     '''
 
-    def __init__(self, iterable={}):
+    def __init__(self, iterable=None):
         super().__init__()
-
+        if iterable is None:
+            iterable = {}
         if isinstance(iterable, collections.abc.Mapping):
             for key, value, in iterable.items():
                 try:
                     self._dict[key] = _process_count(value)
-                except _ZeroCountAttempted:
+                except _ZeroCountAttemptedError:
                     continue
         else:
             _count_elements(self._dict, iterable)
 
-    __getitem__ = lambda self, key: self._dict.get(key, 0)
+    def __getitem__(self, key):
+        return self._dict.get(key, 0)
 
     def most_common(self, n=None):
         '''
@@ -298,7 +300,8 @@ class _BaseBagMixin:
         return type(self)(self._dict_type((key, count * other) for
                                           key, count in self.items()))
 
-    __rmul__ = lambda self, other: self * other
+    def __rmul__(self, other):
+        return self * other
 
     def __floordiv__(self, other):
         '''
@@ -320,21 +323,22 @@ class _BaseBagMixin:
                 type(self)(self._dict_type((key, count // other) for
                                            key, count in self.items()))
             )
-        elif isinstance(other, _BaseBagMixin):
-            for key in other:
-                if key not in self:
-                    assert other[key] >= 1
-                    return 0
-            division_results = []
-            for key in self:
-                if other[key] >= 1:
-                    division_results.append(self[key] // other[key])
-            if division_results:
-                return min(division_results)
-            else:
-                raise ZeroDivisionError
-        else:
+        if not isinstance(other, _BaseBagMixin):
             return NotImplemented
+
+        for key in other:
+            if key not in self:
+                assert other[key] >= 1
+                return 0
+        division_results = []
+        for key in self:
+            if other[key] >= 1:
+                division_results.append(self[key] // other[key])
+        if not division_results:
+            raise ZeroDivisionError
+        return min(division_results)
+
+
 
     def __mod__(self, other):
         '''
@@ -356,10 +360,10 @@ class _BaseBagMixin:
                 type(self)(self._dict_type((key, count % other) for
                                            key, count in self.items()))
             )
-        elif isinstance(other, _BaseBagMixin):
-            return divmod(self, other)[1]
-        else:
+        if not isinstance(other, _BaseBagMixin):
             return NotImplemented
+
+        return divmod(self, other)[1]
 
     def __divmod__(self, other):
         '''
@@ -384,17 +388,16 @@ class _BaseBagMixin:
                 type(self)(self._dict_type((key, count % other) for
                                            key, count in self.items())),
             )
-        elif isinstance(other, _BaseBagMixin):
-
-            floordiv_result = self // other
-            mod_result = type(self)(
-                self._dict_type((key, count - other[key] * floordiv_result) for
-                                key, count in self.items())
-            )
-            return (floordiv_result, mod_result)
-
-        else:
+        if not isinstance(other, _BaseBagMixin):
             return NotImplemented
+
+        floordiv_result = self // other
+        mod_result = type(self)(
+            self._dict_type((key, count - other[key] * floordiv_result) for
+                            key, count in self.items())
+        )
+        return (floordiv_result, mod_result)
+
 
     def __pow__(self, other, modulo=None):
         '''Get a new bag with every item raised to the power of `other`.'''
@@ -403,16 +406,16 @@ class _BaseBagMixin:
         if modulo is None:
             return type(self)(self._dict_type((key, count ** other) for
                                               key, count in self.items()))
-        else:
-            return type(self)(self._dict_type(
-                (key, pow(count, other, modulo)) for
-                key, count in self.items())
-            )
+        return type(self)(self._dict_type(
+            (key, pow(count, other, modulo)) for
+            key, count in self.items())
+        )
 
-    __bool__ = lambda self: any(True for element in self.elements)
+    def __bool__(self):
+        return any(True for element in self.elements)
 
     ###########################################################################
-    ### Defining comparison methods: ##########################################
+    # Defining comparison methods: ############################################
     #                                                                         #
     # We define all the comparison methods manually instead of using
     # `total_ordering` because `total_ordering` assumes that >= means (> and
@@ -432,14 +435,8 @@ class _BaseBagMixin:
         '''
         if not isinstance(other, _BaseBagMixin):
             return NotImplemented
-        found_strict_difference = False # Until challenged.
         all_elements = set(other) | set(self)
-        for element in all_elements:
-            if self[element] > other[element]:
-                return False
-            elif self[element] < other[element]:
-                found_strict_difference = True
-        return found_strict_difference
+        return all(not self[element] > other[element] for element in all_elements)
 
     def __gt__(self, other):
         '''
@@ -453,14 +450,8 @@ class _BaseBagMixin:
         '''
         if not isinstance(other, _BaseBagMixin):
             return NotImplemented
-        found_strict_difference = False # Until challenged.
         all_elements = set(other) | set(self)
-        for element in all_elements:
-            if self[element] < other[element]:
-                return False
-            elif self[element] > other[element]:
-                found_strict_difference = True
-        return found_strict_difference
+        return all(not self[element] < other[element] for element in all_elements)
 
     def __le__(self, other):
         '''
@@ -473,10 +464,8 @@ class _BaseBagMixin:
         '''
         if not isinstance(other, _BaseBagMixin):
             return NotImplemented
-        for element, count in self.items():
-            if count > other[element]:
-                return False
-        return True
+
+        return all(not count > other[element] for element, count in self.items())
 
     def __ge__(self, other):
         '''
@@ -490,12 +479,9 @@ class _BaseBagMixin:
         if not isinstance(other, _BaseBagMixin):
             return NotImplemented
         all_elements = set(other) | set(self)
-        for element in all_elements:
-            if self[element] < other[element]:
-                return False
-        return True
+        return all(not self[element] < other[element] for element in all_elements)
     #                                                                         #
-    ### Finished defining comparison methods. #################################
+    # Finished defining comparison methods. ###################################
     ###########################################################################
 
     def __repr__(self):
@@ -503,8 +489,8 @@ class _BaseBagMixin:
             return f'{type(self).__name__}()'
         return f'{type(self).__name__}({self._dict if self._dict else ""})'
 
-    __deepcopy__ = lambda self, memo: type(self)(
-                                               copy.deepcopy(self._dict, memo))
+    def __deepcopy__(self, memo):
+        return type(self)(copy.deepcopy(self._dict, memo))
 
     def __reversed__(self):
         # Gets overridden in `_OrderedBagMixin`.
@@ -522,8 +508,8 @@ class _BaseBagMixin:
 
         return combi.MapSpace(
             lambda amounts_tuple:
-                         type(self)(self._dict_type(zip(keys, amounts_tuple))),
-            combi.ProductSpace(map(lambda amount: range(amount+1), amounts))
+            type(self)(self._dict_type(zip(keys, amounts_tuple))),
+            combi.ProductSpace(range(amount + 1) for amount in amounts)
         )
 
 
@@ -533,7 +519,7 @@ class _MutableBagMixin(_BaseBagMixin):
     def __setitem__(self, i, count):
         try:
             super().__setitem__(i, _process_count(count))
-        except _ZeroCountAttempted:
+        except _ZeroCountAttemptedError:
             del self[i]
 
     def setdefault(self, key, default=None):
@@ -543,9 +529,10 @@ class _MutableBagMixin(_BaseBagMixin):
         current_count = self[key]
         if current_count > 0:
             return current_count
-        else:
-            self[key] = default
-            return default
+
+        self[key] = default
+        return default
+
 
     def __delitem__(self, key):
         # We're making `__delitem__` not raise an exception on missing or
@@ -567,9 +554,9 @@ class _MutableBagMixin(_BaseBagMixin):
         value = self[key]
         if value == 0 and default is not _NO_DEFAULT:
             return default
-        else:
-            del self[key]
-            return value
+
+        del self[key]
+        return value
 
     def __ior__(self, other):
         '''
@@ -698,12 +685,13 @@ class _MutableBagMixin(_BaseBagMixin):
             for key in tuple(self):
                 self[key] %= other
             return self
-        elif isinstance(other, _BaseBagMixin):
-            floordiv_result = self // other
-            self %= floordiv_result
-            return self
-        else:
+        if not isinstance(other, _BaseBagMixin):
             return NotImplemented
+
+        floordiv_result = self // other
+        self %= floordiv_result
+        return self
+
 
     def __ipow__(self, other, modulo=None):
         '''Raise each count in this bag to the power of `other`.'''
@@ -732,7 +720,9 @@ class _OrderedBagMixin(Ordered):
     where items from this bag are iterated on, they will be returned by their
     order.
     '''
-    __reversed__ = lambda self: reversed(self._dict)
+
+    def __reversed__(self):
+        return reversed(self._dict)
 
     def __eq__(self, other):
         '''
@@ -743,12 +733,8 @@ class _OrderedBagMixin(Ordered):
         '''
         if type(self) != type(other):
             return False
-        for item, other_item in itertools.zip_longest(self.items(),
-                                                      other.items()):
-            if item != other_item:
-                return False
-        else:
-            return True
+
+        return all(item == other_item for item, other_item in itertools.zip_longest(self.items(), other.items()))
 
     index = misc_tools.ProxyProperty(
         '._dict.index',
@@ -814,14 +800,15 @@ class _BaseDictDelegator(collections.abc.MutableMapping):
     implements the `dict` functionality. Subclasses override `_dict_type` to
     determine the type of `dict` to use. (Regular or ordered.)
     '''
-    def __init__(self, dict=None, **kwargs):
+    def __init__(self, dict_data=None, **kwargs):
         self._dict = self._dict_type()
-        if dict is not None:
-            self.update(dict)
+        if dict_data is not None:
+            self.update(dict_data)
         if len(kwargs):
             self.update(kwargs)
 
-    def __len__(self): return len(self._dict)
+    def __len__(self):
+        return len(self._dict)
 
     def __getitem__(self, key):
         if key in self._dict:
@@ -830,9 +817,11 @@ class _BaseDictDelegator(collections.abc.MutableMapping):
             return self.__class__.__missing__(self, key)
         raise KeyError(key)
 
-    def __setitem__(self, key, item): self._dict[key] = item
+    def __setitem__(self, key, item):
+        self._dict[key] = item
 
-    def __delitem__(self, key): del self._dict[key]
+    def __delitem__(self, key):
+        del self._dict[key]
 
     def __iter__(self):
         return iter(self._dict)
@@ -840,7 +829,8 @@ class _BaseDictDelegator(collections.abc.MutableMapping):
     def __contains__(self, key):
         return key in self._dict
 
-    def __repr__(self): return repr(self._dict)
+    def __repr__(self):
+        return repr(self._dict)
 
     def copy(self):
         if self.__class__ is _OrderedDictDelegator:
@@ -849,18 +839,18 @@ class _BaseDictDelegator(collections.abc.MutableMapping):
         data = self._dict
         try:
             self._dict = self._dict_type()
-            c = copy.copy(self)
+            copy_obj = copy.copy(self)
         finally:
             self._dict = data
-        c.update(self)
-        return c
+        copy_obj.update(self)
+        return copy_obj
 
     @classmethod
     def fromkeys(cls, iterable, value=None):
-        d = cls()
+        obj = cls()
         for key in iterable:
-            d[key] = value
-        return d
+            obj[key] = value
+        return obj
 
 
 class _OrderedDictDelegator(Ordered, _BaseDictDelegator):

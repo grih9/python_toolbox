@@ -21,8 +21,7 @@ class OrderedDict(StdlibOrderedDict):
         The optional `key` argument, (not to be confused with the dictionary
         keys,) will be passed to the `sorted` function as a key function.
         '''
-        key_function = \
-                   comparison_tools.process_key_function_or_attribute_name(key)
+        key_function = comparison_tools.process_key_function_or_attribute_name(key)
         sorted_keys = sorted(self.keys(), key=key_function, reverse=reverse)
         for key_ in sorted_keys[1:]:
             self.move_to_end(key_)

@@ -45,12 +45,15 @@ class WeakKeyIdentityDict(collections.abc.MutableMapping):
     def __init__(self, dict_=None):
         self.data = {}
 
-        def remove(k, selfref=weakref.ref(self)):
+        selfref = weakref.ref(self)
+
+        def remove(key, selfref=selfref):
             self = selfref()
             if self is not None:
-                del self.data[k]
+                del self.data[key]
         self._remove = remove
-        if dict_ is not None: self.update(dict_)
+        if dict_ is not None:
+            self.update(dict_)
 
     def __delitem__(self, key):
         del self.data[IdentityRef(key)]
@@ -68,14 +71,14 @@ class WeakKeyIdentityDict(collections.abc.MutableMapping):
         """ D.copy() -> a shallow copy of D """
         new = WeakKeyIdentityDict()
         for key, value in self.data.items():
-            o = key()
-            if o is not None:
-                new[o] = value
+            obj = key()
+            if obj is not None:
+                new[obj] = value
         return new
 
     def get(self, key, default=None):
         """ D.get(k[,d]) -> D[k] if k in D, else d.  d defaults to None. """
-        return self.data.get(IdentityRef(key),default)
+        return self.data.get(IdentityRef(key), default)
 
     def __contains__(self, key):
         try:
@@ -88,12 +91,12 @@ class WeakKeyIdentityDict(collections.abc.MutableMapping):
 
     def items(self):
         """ D.items() -> list of D's (key, value) pairs, as 2-tuples """
-        L = []
+        obj_list = []
         for key, value in list(self.data.items()):
-            o = key()
-            if o is not None:
-                L.append((o, value))
-        return L
+            obj = key()
+            if obj is not None:
+                obj_list.append((obj, value))
+        return obj_list
 
     def iteritems(self):
         """ D.iteritems() -> an iterator over the (key, value) items of D """
@@ -142,21 +145,21 @@ class WeakKeyIdentityDict(collections.abc.MutableMapping):
 
     def keys(self):
         """ D.keys() -> list of D's keys """
-        L = []
+        obj_list = []
         for wr in list(self.data.keys()):
-            o = wr()
-            if o is not None:
-                L.append(o)
-        return L
+            obj = wr()
+            if obj is not None:
+                obj_list.append(obj)
+        return obj_list
 
     def popitem(self):
         """ D.popitem() -> (k, v), remove and return some (key, value) pair
         as a 2-tuple; but raise KeyError if D is empty """
         while True:
             key, value = self.data.popitem()
-            o = key()
-            if o is not None:
-                return o, value
+            obj = key()
+            if obj is not None:
+                return obj, value
 
     def pop(self, key, *args):
         """ D.pop(k[,d]) -> v, remove specified key and return the
@@ -166,19 +169,19 @@ class WeakKeyIdentityDict(collections.abc.MutableMapping):
 
     def setdefault(self, key, default=None):
         """D.setdefault(k[,d]) -> D.get(k,d), also set D[k]=d if k not in D"""
-        return self.data.setdefault(IdentityRef(key, self._remove),default)
+        return self.data.setdefault(IdentityRef(key, self._remove), default)
 
-    def update(self, dict=None, **kwargs):
+    def update(self, dict_data=None, **kwargs):
         """ D.update(E, **F) -> None. Update D from E and F: for k in E: D[k] =
         E[k] (if E has keys else: for (k, v) in E: D[k] = v) then: for k in F:
         D[k] = F[k] """
 
-        d = self.data
-        if dict is not None:
-            if not hasattr(dict, "items"):
-                dict = type({})(dict)
-            for key, value in dict.items():
-                d[IdentityRef(key, self._remove)] = value
+        data = self.data
+        if dict_data is not None:
+            if not hasattr(dict_data, "items"):
+                dict_data = type({})(dict_data)
+            for key, value in dict_data.items():
+                data[IdentityRef(key, self._remove)] = value
         if len(kwargs):
             self.update(kwargs)
 

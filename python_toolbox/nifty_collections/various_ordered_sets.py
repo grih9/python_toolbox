@@ -30,8 +30,8 @@ class BaseOrderedSet(collections.abc.Set, collections.abc.Sequence):
         for i, item in enumerate(self):
             if i == index:
                 return item
-        else:
-            raise IndexError
+
+        raise IndexError
 
     def __len__(self):
         return len(self._map)
@@ -55,8 +55,8 @@ class BaseOrderedSet(collections.abc.Set, collections.abc.Sequence):
 
     def __repr__(self):
         if not self:
-            return '%s()' % (self.__class__.__name__,)
-        return '%s(%r)' % (self.__class__.__name__, list(self))
+            return f'{self.__class__.__name__}()'
+        return f'{self.__class__.__name__}({list(self)})'
 
     def __eq__(self, other):
         return (
@@ -130,8 +130,7 @@ class OrderedSet(BaseOrderedSet, collections.abc.MutableSet):
         a key function.
         '''
         # Inefficient implementation until someone cares.
-        key_function = \
-                   comparison_tools.process_key_function_or_attribute_name(key)
+        key_function = comparison_tools.process_key_function_or_attribute_name(key)
         sorted_members = sorted(tuple(self), key=key_function, reverse=reverse)
 
         self.clear()
@@ -144,9 +143,9 @@ class OrderedSet(BaseOrderedSet, collections.abc.MutableSet):
         If the element is not a member, do nothing.
         '''
         if key in self._map:
-            key, prev, next = self._map.pop(key)
-            prev[NEXT] = next
-            next[PREV] = prev
+            key, prev, _next = self._map.pop(key)
+            prev[NEXT] = _next
+            _next[PREV] = prev
 
     def pop(self, last=True):
         '''Remove and return an arbitrary set element.'''

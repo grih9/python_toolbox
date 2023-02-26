@@ -13,11 +13,10 @@ def get_median(iterable):
     if len(iterable) % 2 == 0:
         higher_midpoint = len(iterable) // 2
         lower_midpoint = higher_midpoint - 1
-        return (sorted_values[lower_midpoint] +
-                sorted_values[higher_midpoint]) / 2
-    else:
-        midpoint = len(iterable) // 2
-        return sorted_values[midpoint]
+        return (sorted_values[lower_midpoint] + sorted_values[higher_midpoint]) / 2
+
+    midpoint = len(iterable) // 2
+    return sorted_values[midpoint]
 
 
 def get_mean(iterable):

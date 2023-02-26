@@ -72,12 +72,7 @@ class EmittingWeakKeyDefaultDict(WeakKeyDefaultDict):
         return result
 
     def __repr__(self):
-        return '%s(%s, %s, %s)' % (
-            type(self).__name__,
-            self.emitter,
-            self.default_factory,
-            dict(self)
-        )
+        return f'{type(self).__name__}({self.emitter}, {self.default_factory}, {dict(self)})'
 
     def __reduce__(self):
         """
@@ -91,9 +86,6 @@ class EmittingWeakKeyDefaultDict(WeakKeyDefaultDict):
 
            This API is used by pickle.py and copy.py.
         """
-        if self.default_factory:
-            parameters = (self.emitter, self.default_factory)
-        else: # not self.default_factory
-            parameters = (self.emitter)
+        parameters = (self.emitter, self.default_factory) if self.default_factory else (self.emitter)
 
         return (type(self), parameters, None, None, iter(self.items()))

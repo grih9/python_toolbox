@@ -23,8 +23,7 @@ def cute_floor_div(x, y):
 
     if ((x in infinities) and (y != 0)) or (y in infinities) and (x not in infinities):
         return x / y
-    else:
-        return x // y
+    return x // y
 
 
 def cute_divmod(x, y):
@@ -37,13 +36,12 @@ def cute_divmod(x, y):
     '''
     if (x in infinities) and (y != 0):
         return (x / y, float('nan'))
-    elif (y in infinities) and (x not in infinities):
+    if (y in infinities) and (x not in infinities):
         return (
             x / y,
             x if (get_sign(x) == get_sign(y)) else float('nan')
         )
-    else:
-        return divmod(x, y)
+    return divmod(x, y)
 
 
 def get_sign(number):
@@ -70,8 +68,7 @@ def round_to_int(number, up=False):
     rounded_down = int(cute_floor_div(number, 1))
     if up:
         return int(number) if (isinstance(number, float) and number.is_integer()) else rounded_down + 1
-    else:
-        return rounded_down
+    return rounded_down
 
 
 def ceil_div(x, y):
@@ -92,7 +89,7 @@ def convert_to_base_in_tuple(number, base):
     sign_ = get_sign(number)
     if sign_ == 0:
         return (0,)
-    elif sign_ == -1:
+    if sign_ == -1:
         raise NotImplementedError
 
     work_in_progress = []
@@ -112,10 +109,9 @@ def restrict_number_to_range(number, low_cutoff=-infinity,
     '''
     if number < low_cutoff:
         return low_cutoff
-    elif number > high_cutoff:
+    if number > high_cutoff:
         return high_cutoff
-    else:
-        return number
+    return number
 
 
 def binomial(big, small):
@@ -129,8 +125,7 @@ def binomial(big, small):
         return 1
     if big < small:
         return 0
-    else:
-        return (math.factorial(big) // math.factorial(big - small) // math.factorial(small))
+    return (math.factorial(big) // math.factorial(big - small) // math.factorial(small))
 
 
 def product(numbers):

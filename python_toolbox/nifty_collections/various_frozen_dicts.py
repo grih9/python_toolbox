@@ -11,14 +11,19 @@ from .ordered_dict import OrderedDict
 
 
 class _AbstractFrozenDict(collections.abc.Mapping):
-    _hash = None # Overridden by instance when calculating hash.
+    _hash = None  # Overridden by instance when calculating hash.
 
     def __init__(self, *args, **kwargs):
         self._dict = self._dict_type(*args, **kwargs)
 
-    __getitem__ = lambda self, key: self._dict[key]
-    __len__ = lambda self: len(self._dict)
-    __iter__ = lambda self: iter(self._dict)
+    def __getitem__(self, key):
+        return self._dict[key]
+
+    def __len__(self):
+        return len(self._dict)
+
+    def __iter__(self):
+        return iter(self._dict)
 
     def copy(self, *args, **kwargs):
         base_dict = self._dict.copy()
@@ -41,9 +46,11 @@ class _AbstractFrozenDict(collections.abc.Mapping):
 
         return self._hash
 
-    __repr__ = lambda self: '%s(%s)' % (type(self).__name__,
-                                        repr(self._dict))
-    __reduce__ = lambda self: (self.__class__ , (self._dict,))
+    def __repr__(self):
+        return f'{type(self).__name__}({repr(self._dict)})'
+
+    def __reduce__(self):
+        return self.__class__, (self._dict,)
 
 
 class FrozenDict(_AbstractFrozenDict):
@@ -71,7 +78,7 @@ class FrozenOrderedDict(Ordered, _AbstractFrozenDict):
     def __eq__(self, other):
         if isinstance(other, (OrderedDict, FrozenOrderedDict)):
             return collections.abc.Mapping.__eq__(self, other) and \
-                                             all(map(operator.eq, self, other))
+                   all(map(operator.eq, self, other))
         return collections.abc.Mapping.__eq__(self, other)
 
     __hash__ = _AbstractFrozenDict.__hash__
