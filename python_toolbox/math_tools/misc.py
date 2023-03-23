@@ -121,6 +121,7 @@ def binomial(big, small):
     This is used in combinatorical calculations. More information:
     http://en.wikipedia.org/wiki/Binomial_coefficient
     '''
+    assert big >= 0 and small >= 0
     if big == small:
         return 1
     if big < small:

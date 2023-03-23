@@ -9,6 +9,7 @@ infinities = (infinity, -infinity)
 def get_median(iterable):
     '''Get the median of an iterable of numbers.'''
     sorted_values = sorted(iterable)
+    assert len(sorted_values) != 0
 
     if len(iterable) % 2 == 0:
         higher_midpoint = len(iterable) // 2

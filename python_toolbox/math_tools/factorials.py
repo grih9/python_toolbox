@@ -25,6 +25,7 @@ def factorial(number, start=1):
         60
 
     '''
+    assert number >= 0
     from python_toolbox import misc_tools
     return misc_tools.general_product(range(start, number + 1), start=1)
 
