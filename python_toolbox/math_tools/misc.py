@@ -21,7 +21,7 @@ def cute_floor_div(x, y):
     `infinity`. (Python's built-in `divmod` would make it `nan`.)
     '''
 
-    if ((x in infinities) and (y != 0)) or (y in infinities) and (x not in infinities):
+    if ((x in infinities) and (y != 0)) or ((y in infinities) and (x not in infinities)):
         return x / y
     return x // y
 
@@ -35,12 +35,9 @@ def cute_divmod(x, y):
     `infinity`. (Python's built-in `divmod` would make it `nan`.)
     '''
     if (x in infinities) and (y != 0):
-        return (x / y, float('nan'))
+        return x / y, float('nan')
     if (y in infinities) and (x not in infinities):
-        return (
-            x / y,
-            x if (get_sign(x) == get_sign(y)) else float('nan')
-        )
+        return x / y, x if (get_sign(x) == get_sign(y)) else float('nan')
     return divmod(x, y)
 
 
@@ -65,9 +62,10 @@ def round_to_int(number, up=False):
     If you want to round a number to the closest `int`, just use
     `int(round(x))`.
     '''
+    assert isinstance(number, float)
     rounded_down = int(cute_floor_div(number, 1))
     if up:
-        return int(number) if (isinstance(number, float) and number.is_integer()) else rounded_down + 1
+        return int(number) if number.is_integer() else rounded_down + 1
     return rounded_down
 
 
@@ -86,18 +84,18 @@ def convert_to_base_in_tuple(number, base):
     assert isinstance(number, numbers.Integral)
     assert isinstance(base, numbers.Integral)
     assert base >= 2
-    sign_ = get_sign(number)
-    if sign_ == 0:
+    number_sign = get_sign(number)
+    if number_sign == 0:
         return (0,)
-    if sign_ == -1:
+    if number_sign == -1:
         raise NotImplementedError
 
-    work_in_progress = []
+    number_in_base_list = []
     while number:
-        work_in_progress.append(int(number % base))
+        number_in_base_list.append(int(number % base))
         number //= base
 
-    return tuple(reversed(work_in_progress))
+    return tuple(reversed(number_in_base_list))
 
 
 def restrict_number_to_range(number, low_cutoff=-infinity,
@@ -126,7 +124,7 @@ def binomial(big, small):
         return 1
     if big < small:
         return 0
-    return (math.factorial(big) // math.factorial(big - small) // math.factorial(small))
+    return math.factorial(big) // math.factorial(big - small) // math.factorial(small)
 
 
 def product(numbers):

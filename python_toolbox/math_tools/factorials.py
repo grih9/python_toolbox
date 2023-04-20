@@ -47,15 +47,13 @@ def inverse_factorial(number, round_up=True):
 
     '''
     assert number >= 0
-    if number == 0:
-        return 0
-    if number < 1:
-        return int(round_up)  # Heh.
-    if number == 1:
-        return 1
+    if number <= 1:
+        if 0 < number < 1:
+            return int(round_up)  # Heh.
+        return number
 
     current_number = 1
-    for multiplier in itertools.count(2):
+    for multiplier in itertools.count(start=2):
         current_number *= multiplier
         if current_number == number:
             return multiplier
@@ -83,7 +81,7 @@ def from_factoradic(factoradic_number):
     number = 0
     for i, value in enumerate(reversed(factoradic_number)):
         assert 0 <= value <= i
-        number += value * math.factorial(i)
+        number += value * factorial(i)
     return number
 
 
@@ -110,12 +108,12 @@ def to_factoradic(number, n_digits_pad=0):
     assert number >= 0
     assert isinstance(n_digits_pad, numbers.Integral)
     n_digits = inverse_factorial(number, round_up=False) + 1
-    digits = [None] * n_digits
+    digits = [None for _ in range(n_digits)]
     current_number = number
     for i in range(n_digits)[::-1]:
-        unit = math.factorial(i)
+        unit = factorial(i)
         digits[n_digits - i - 1], current_number = divmod(current_number, unit)
     result = tuple(digits)
-    if (len(result) < n_digits_pad):
+    if len(result) < n_digits_pad:
         return ((0,) * (n_digits_pad - len(result))) + result
     return result
